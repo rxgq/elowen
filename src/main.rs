@@ -2,9 +2,12 @@ use std::fs;
 use std::env;
 
 use lexer::Lexer;
+use parser::Parser;
 
 mod lexer;
 mod token;
+mod parser;
+mod expression;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -28,5 +31,8 @@ fn main() {
     for token in tokens {
         println!("{:?}", token)
     }
+
+    let mut parser = Parser::new(tokens.to_vec());
+    parser.parse_ast();
 
 }

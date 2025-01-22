@@ -1,5 +1,14 @@
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Token {
     Identifier(String),
-    Illegal
+    Integer(i32),
+    Float(f32),
+    Verb(String),
+    Noun(String),
+    Preposition(String),
+    Determiner(String),
+    // String(String),
+    // Char(char),
+    Illegal(char),
+    Eof,
 }
