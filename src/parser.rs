@@ -2,11 +2,17 @@ use core::panic;
 
 use crate::{expression::{Expression, Literal}, token::Token};
 
+enum ParseError {
+    ExpectedExpressionAfter(String, String)
+}
+
 pub struct Parser {
     tokens: Vec<Token>,
     current: usize,
     expressions: Vec<Expression>
 }
+
+type ParseResult<T> = Result<T, ParseError>;
 
 impl Parser {
     pub fn new(tokens: Vec<Token>) -> Self {
@@ -18,7 +24,7 @@ impl Parser {
     }
 
     pub fn parse_ast(&mut self) -> &Vec<Expression> {
-        while let Some(token) = self.current_token() {
+        while let Some(_) = self.current_token() {
             let expr = self.parse_statement();
             self.expressions.push(expr);
 
@@ -33,7 +39,7 @@ impl Parser {
 
         match token {
             Some(Token::Verb(_)) => {
-                self.parse_variable_declaration()
+                self.parse_definition_context()
             },
             _ => {
                 todo!()
@@ -41,28 +47,71 @@ impl Parser {
         }
     }
 
-    fn parse_variable_declaration(&mut self) -> Expression {
-        if let Some(_) = self.current_token() {
-            self.expect(Token::Verb(String::new()));
-        };
+    fn is_identifier(&mut self) -> bool {
+        return self.check(Token::Identifier(String::new()));
+    }
 
-        let identifier = if let Some(token) = self.current_token() {
-            self.check(Token::Identifier(String::new()));
-            self.current += 1;
-            token
-        } else {
-            panic!("Expected an Identifier token after Verb in variable declaration");
-        };
+    fn is_determiner(&mut self) -> bool {
+        return self.check(Token::Determiner(String::new()));
+    }
 
+    fn is_noun(&mut self) -> bool {
+        return self.check(Token::Noun(String::new()));
+    }
 
-        self.expect(Token::Preposition(String::new()));
+    fn is_literal(&mut self) -> bool {
+        return self.check(Token::Integer(0)) ||
+            self.check(Token::Float(0.0));
+    }
 
-        let value = self.parse_expression();
+    fn is_preposition(&mut self) -> bool {
+        return self.check(Token::Preposition(String::new()));
+    }
 
-        Expression::VariableDeclaration { 
-            identifier, 
-            value: Box::new(value)
+    fn prefer_determiner() {
+        // todo!
+    }
+
+    fn parse_definition_context(&mut self) -> Expression {
+        self.advance();
+
+        if !self.is_identifier() {
+            if self.is_determiner() {
+                self.advance();
+
+                if !self.is_noun() {
+                    panic!("expected noun after determiner")
+                }
+            }
+            else if self.is_literal()  {
+                self.advance();
+
+                if !self.is_preposition() {
+                    panic!("expected preposition after literal expression")
+                }
+
+                self.advance();
+
+                if self.is_determiner() {
+                    self.advance();
+
+                    if !self.is_noun() {
+                        panic!("expected noun after determiner")
+                    }
+                }
+
+                self.advance();
+                
+                if !self.is_identifier() {
+                    panic!("expected identifier after noun")
+                }
+            }
+            else {
+                panic!("expected determiner");
+            }
         }
+        
+        panic!("got to the end");
     }
 
     fn parse_expression(&mut self) -> Expression {
@@ -92,13 +141,14 @@ impl Parser {
                 (Token::Verb(_), Token::Verb(_)) |
                 (Token::Identifier(_), Token::Identifier(_)) |
                 (Token::Preposition(_), Token::Preposition(_)) |
-                (Token::Determiner(_), Token::Determiner(_))
+                (Token::Determiner(_), Token::Determiner(_)) |
+                (Token::Noun(_), Token::Noun(_)) |
+                (Token::Float(_), Token::Float(_)) |
+                (Token::Integer(_), Token::Integer(_)) 
                  => {
                     return true
                 }
-                _ => {
-                    println!("unknown check type. pattern may not be accounted for.")
-                }
+                _ => {}
             }
         }
 
@@ -111,13 +161,15 @@ impl Parser {
             return true
         }
 
-        panic!("expected {:?} here", token);
-
         false
     }
     
 
     fn current_token(&mut self) -> Option<Token> {
         return self.tokens.iter().nth(self.current).cloned();
+    }
+
+    fn advance(&mut self) {
+        self.current += 1
     }
 }

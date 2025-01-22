@@ -1,1 +1,1 @@
-declare x as 10
+assign 10 to the variable x
