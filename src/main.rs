@@ -35,7 +35,7 @@ fn main() {
     let mut parser = Parser::new(tokens.to_vec());
     let ast = parser.parse_ast();
 
-    for expr in ast {
+    while let Ok(expr) = ast {
         println!("{:?}", expr)
     }
 
