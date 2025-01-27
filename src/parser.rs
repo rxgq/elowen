@@ -55,62 +55,26 @@ impl Parser {
     fn parse_definition_context(&mut self) -> ParseResult<Expression> {
         self.advance();
         
-        let mut identifier: Token;
-
+        let identifier = self.current_token();
         if !self.is_identifier() {
-            if self.is_determiner() {
-                self.advance();
-
-                if !self.is_noun() {
-                    return Err(ParseError::ExpectedExpressionAfter(
-                        "noun".to_string(),
-                        "determiner".to_string()
-                    ))
-                }
-            }
-            else if self.is_literal()  {
-                self.advance();
-
-                if !self.is_preposition() {
-                    return Err(ParseError::ExpectedExpressionAfter(
-                        "preposition".to_string(),
-                        "literal expression".to_string()
-                    ))
-                }
-
-                self.advance();
-
-                if self.is_determiner() {
-                    self.advance();
-
-                    if !self.is_noun() {
-                        return Err(ParseError::ExpectedExpressionAfter(
-                            "noun".to_string(),
-                            "determiner".to_string()
-                        ))
-                    } else {
-                        self.advance();
-                    }
-                }
-                
-                if !self.is_identifier() {
-                    identifier = self.current_token().unwrap();
-
-                    return Err(ParseError::ExpectedExpressionAfter(
-                        "identifier".to_string(),
-                        "noun".to_string()
-                    ))
-                }
-            }
-            else {
-                identifier = self.current_token().unwrap();
-            }
+            return Err(ParseError::ExpectedExpressionAfter(
+                "identifier".to_string(), "declaration verb".to_string())
+            );
         }
+        self.advance();
+        
+        if !self.is_preposition() {
+            return Err(ParseError::ExpectedExpressionAfter(
+                "initializing preposition".to_string(), "declaration verb".to_string())
+            );
+        }
+        self.advance();
 
-
+        let value = self.parse_expression();
+        
         Ok(Expression::VariableDeclaration { 
-            identifier: identifier,
-            value: Box::new(Expression::Literal(Literal::Integer(1)))
+            identifier: identifier.unwrap(),
+            value: Box::new(value)
         })
     }
 
@@ -168,16 +132,11 @@ impl Parser {
     }
 
     fn is_literal(&mut self) -> bool {
-        return self.check(Token::Integer(0)) ||
-            self.check(Token::Float(0.0));
+        return self.check(Token::Integer(0)) || self.check(Token::Float(0.0));
     }
 
     fn is_preposition(&mut self) -> bool {
         return self.check(Token::Preposition(String::new()));
-    }
-
-    fn prefer_determiner() {
-        // todo!
     }
 
     fn current_token(&mut self) -> Option<Token> {
