@@ -82,6 +82,7 @@ impl Lexer {
         match self.current_char() {
             Some(c) if c.is_alphabetic() => self.parse_identifier(),
             Some(c) if c.is_numeric() => self.parse_numeric(),
+            Some(c) if c == '\'' => self.parse_char(),
             Some(_) => {
                 let current_char = self.current_char(); 
                 self.syntax_error(&format!("invalid symbol '{}'", current_char.unwrap()));
@@ -89,6 +90,30 @@ impl Lexer {
                 Token::Illegal(current_char.unwrap())
             },
             None => Token::Eof
+        }
+    }
+
+    fn parse_char(&mut self) -> Token {
+        self.advance();
+
+        let c = match self.current_char() {
+            Some(c) => c,
+            None => {
+                self.syntax_error("unterminated char literal");
+                return Token::Illegal('\'');
+            }
+        };
+        self.advance();
+
+        match self.current_char() {
+            Some('\'') => {
+                self.advance();
+                return Token::Char(c)
+            }
+            _ => {
+                self.syntax_error("invalid char literal");
+                Token::Illegal('\'')
+            }
         }
     }
 

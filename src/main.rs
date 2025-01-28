@@ -1,6 +1,7 @@
 use std::fs;
 use std::env;
 
+use analyzer::Analyzer;
 use lexer::Lexer;
 use parser::Parser;
 
@@ -8,6 +9,7 @@ mod lexer;
 mod token;
 mod parser;
 mod expression;
+mod analyzer;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -35,8 +37,11 @@ fn main() {
     let mut parser = Parser::new(tokens.to_vec());
     let ast = parser.parse_ast();
 
-    if let Ok(expr) = ast {
-        println!("{:?}", expr);
-    }
+    // if let Ok(expr) = ast {
+    //     println!("{:?}", expr);
+    // }
+
+    let mut analyzer = Analyzer::new(ast.unwrap().clone());
+    analyzer.analyze_ast();
 
 }

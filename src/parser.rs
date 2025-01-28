@@ -2,6 +2,7 @@ use core::panic;
 
 use crate::{expression::{Expression, Literal}, token::Token};
 
+#[derive(Debug)]
 pub enum ParseError {
     ExpectedExpressionAfter(String, String)
 }
@@ -53,6 +54,7 @@ impl Parser {
     }
 
     fn parse_definition_context(&mut self) -> ParseResult<Expression> {
+        let verb = self.current_token().unwrap();
         self.advance();
         
         let identifier = self.current_token();
@@ -68,12 +70,15 @@ impl Parser {
                 "initializing preposition".to_string(), "declaration verb".to_string())
             );
         }
+        let preposition = self.current_token().unwrap();
         self.advance();
 
         let value = self.parse_expression();
         
         Ok(Expression::VariableDeclaration { 
+            verb,
             identifier: identifier.unwrap(),
+            preposition,
             value: Box::new(value)
         })
     }

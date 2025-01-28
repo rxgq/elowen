@@ -7,8 +7,8 @@ pub enum Token {
     Noun(String),
     Preposition(String),
     Determiner(String),
-    // String(String),
-    // Char(char),
+    String(String),
+    Char(char),
     Illegal(char),
     Eof,
 }
