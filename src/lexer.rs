@@ -83,6 +83,7 @@ impl Lexer {
             Some(c) if c.is_alphabetic() => self.parse_identifier(),
             Some(c) if c.is_numeric() => self.parse_numeric(),
             Some(c) if c == '\'' => self.parse_char(),
+            Some(c) if c == '\"' => self.parse_string(),
             Some(_) => {
                 let current_char = self.current_char(); 
                 self.syntax_error(&format!("invalid symbol '{}'", current_char.unwrap()));
@@ -91,6 +92,23 @@ impl Lexer {
             },
             None => Token::Eof
         }
+    }
+
+    fn parse_string(&mut self) -> Token {
+        self.advance();
+        
+        let start = self.current;
+        while let Some(c) = self.current_char() {
+            if c == '\"' {
+                break
+            }
+
+            self.advance();
+        }
+
+        let str = &self.source[start..self.current];
+
+        Token::String(String::from(str))
     }
 
     fn parse_char(&mut self) -> Token {
@@ -125,7 +143,7 @@ impl Lexer {
             match c {                
                 c if c.is_numeric() || c == '.' => {
                     if c == '.' && is_decimal {
-                        self.syntax_error("");
+                        self.syntax_error("invalid numeric literal");
                     } else if c == '.' {
                         is_decimal = true
                     }
